@@ -2,7 +2,9 @@
 
 A collection of some simple Javascript prototype tools I have created during my mandatory Swiss civil service in order to facilitate the addition of coordinates to the bibliographic metadata of the [Ryhiner Map Collection](http://www.ub.unibe.ch/content/suchen__finden/sondersammlungen/the_ryhiner_map_collection/index_ger.html) at the University Library Bern.
 
-Some documentaion can be found at doc/RyhinerBoundingBoxToolDoku.pdf (unfortunately, German only).
+Some documentaion can be found at [doc/RyhinerBoundingBoxToolDoku.pdf](doc/RyhinerBoundingBoxToolDoku.pdf) (unfortunately, German only).
+
+You can [try the tool here](http://biblio.unibe.ch/web-apps/bbox/boundingBoxTool.html).
 
 ## License
 
