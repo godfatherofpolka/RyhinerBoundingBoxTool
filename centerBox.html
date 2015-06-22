@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--     
+  Copyright 2012 Samuel Bucheli, Thomas Klöti
+
+  This file is part of the Ryhiner Bounding Box Tool.
+
+  The Ryhiner Bounding Box Tool is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  The Ryhiner Bounding Box Tool is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Ryhiner Bounding Box Tool.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!-- a simple tool create a bounding box around a center given in decimal format (as used by Google Maps, Wikipedia, etc.)-->
+<html>
+  <head>
+    <title>Ryhiner Center Box Tool</title>
+    
+    <meta charset="UTF-8">
+    <style type="text/css">
+      html { height: 100%; }
+      body { height: 100%; margin: 0; padding: 0; }
+	  #output {margin-top: 20px; }
+    </style>
+	<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3.9&amp;sensor=false&amp;libraries=drawing"></script>
+    <script type="text/javascript" src="js/utils.js"></script>
+	<script type="text/javascript" src="js/Coordinate.js"></script>
+	<script type="text/javascript" src="js/Bounds.js"></script>
+    <script type="text/javascript">
+function centerBox() {
+    "use strict";
+    var coordinates = document.getElementById("centerCoordinates").value.split(",");
+			
+	var sizeDegrees = getValueOrZero("sizeDegrees");
+	var sizeMinutes = getValueOrZero("sizeMinutes");
+	var sizeSeconds = getValueOrZero("sizeSeconds");
+	
+	var size = dsmToSeconds(sizeDegrees, sizeMinutes, sizeSeconds);
+	
+    if (isNaN(coordinates[0]) || isNaN(coordinates[1])) {
+        alert("Format of center coordinates not valid. Example: 46.95, 7.45");
+		return false;
+	}
+	
+	if (!size) {
+	    alert("Please enter a size bigger than zero");
+		return false;
+	}
+	
+	var latLng = new google.maps.LatLng(coordinates[0], coordinates[1]);
+	
+	var bounds = new Bounds();
+	bounds.setFromLatLngBounds(new google.maps.LatLngBounds(latLng, latLng));
+	bounds.extendSecondsTotal('N', 'N', Math.floor(size/2));
+	bounds.extendSecondsTotal('S', 'S', Math.floor(size/2));
+	bounds.extendSecondsTotal('W', 'W', Math.floor(size/2));
+	bounds.extendSecondsTotal('E', 'E', Math.floor(size/2));
+	//bounds.roundTo(size);
+	
+   	
+	var outputDiv = document.getElementById('output');
+	clearNode(outputDiv);
+	var input = document.createElement('input');
+	input.type = "text";
+	input.size = "50";
+	input.value = bounds.toAleph255String();
+	outputDiv.appendChild(document.createTextNode("Aleph 255 Coordinates: "));
+	outputDiv.appendChild(input);
+}
+    </script>
+  </head>
+  <body>
+    <form onsubmit="centerBox(); return false;">
+      Center: <input type="text" size="30" maxlength="50" id="centerCoordinates" autocomplete="off" value="46.95, 7.45"/>
+      Size: <input size="3" maxlength="3" type="text" id="sizeDegrees" value="0" autocomplete="off"/>º
+	  <input size="2" maxlength="2" type="text" id="sizeMinutes" value="5" autocomplete="off"/>' 
+      <input size="2" maxlength="2" type="text" id="sizeSeconds" value="0" autocomplete="off"/>"
+	  <button type="submit">Get Center Box</button>    
+	</form>
+    
+    <div id="output"></div>	
+	
+    
+    
+  </body>
+</html>

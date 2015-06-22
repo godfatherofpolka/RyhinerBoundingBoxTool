@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2012 Samuel Bucheli, Thomas Klöti
+
+  This file is part of the Ryhiner Bounding Box Tool.
+
+  The Ryhiner Bounding Box Tool is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  The Ryhiner Bounding Box Tool is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Ryhiner Bounding Box Tool.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!--  a tool to determine bounding coordinates of maps in the Ryhiner collection, 
+  --  see http://www.zb.unibe.ch/maps/ryhiner/sammlung/?group=volume and 
+  --- http://www.ub.unibe.ch/content/suchen__finden/sondersammlungen/sammlung_ryhiner/index_ger.html
+  --
+  --  WARNING! This tool and the accompanying tools) are a quick'n'dirty prototyps/proofs of concept and come without any warranty whatsoever.
+  --  In order to turn them into a productive version, the code would need a complete refactoring, in particular:
+  --  - the Google Maps LatLngBounds class and the tool's own Bounds class need to be reconciled using proper JavaScript programming paradigms
+        (wrapper / proxy object?)
+  --  - implement proper usage of the Google Maps MVC model (bounds, bounding box, center marker) (maybe a custom overlay based on rectangle
+        with a center marker bound to it, using the tool's own Bounds class, maybe also put the PictureOverlay capability in there?)
+  --  - lots of ugly JavaScript hacks, duplicated code, etc. that needs to be refactored (e.g. how rounding problems are currently dealt with)
+  --
+  --  Remark: this tool is currently using version 3.9 of the Google Maps API
+  --
+  --  The following files should come with this file:
+  --  - boundingBoxTool.html (this file)
+  --  - centerBox.html
+  --  - combine.html
+  --  - showPictures.html
+  --  - split.html
+  --  - js/Bounds.js
+  --  - js/Coordinate.js
+  --  - js/gruppen.js
+  --  - js/main.js
+  --  - js/PictureOverlay.js
+  --  - js/utils.js
+  -->  
+<html>
+  <head>
+    <title>Ryhiner Bounding Box Tool Beta</title>
+    
+    <meta charset="UTF-8">
+    <style type="text/css">
+      html { height: 100%; }
+      body { height: 100%; margin: 0; padding: 0; }
+      #map_canvas { height: 100%; width: 70%; float: left; margin-right: 5px;}
+    </style>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?v=3.9&amp;sensor=false&amp;libraries=drawing"></script>
+	<script type="text/javascript" src="js/utils.js"></script>
+	<script type="text/javascript" src="js/Coordinate.js"></script>
+	<script type="text/javascript" src="js/Bounds.js"></script>
+	<script type="text/javascript" src="js/PictureOverlay.js"></script>
+	<script type="text/javascript" src="js/main.js"></script>
+    <script type="text/javascript">
+	    // see js/main.js
+        google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+  <body>
+    <div id="map_canvas"></div>
+    
+    <form onsubmit="setCoordinatesFromAleph255(); return false;"><input type="text" size="50" maxlength="50" id="aleph255Coordinates" value="$$cW 25&deg;00'00&quot;-E 60&deg;00'00&quot;/N 70&deg;00'00&quot;-N 30&deg;00'00&quot;" autocomplete="off"/><button type="submit">Set Aleph 255 Coordinates</button></form>
+<form onsubmit="setCoordinatesFromAleph341(); return false;"><input type="text" size="44" maxlength="44" id="aleph341Coordinates" value="$$dW0250000$$eE0600000$$fN0700000$$gN0300000" autocomplete="off"/><button type="submit">Set Aleph 341 Coordinates</button></form>
+
+    <table style="text-align:center;">
+      <tr>
+        <td>
+        </td>
+        <td>
+          <button onclick="changeBounds('N','N');">+</button><br/>
+          <button onclick="changeBounds('N','S');">-</button>
+        </td>
+        <td>
+        </td>
+        <td style="text-align:right;">
+          Adjust Bounding Box:
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <button onclick="changeBounds('W','W');">+</button>
+          <button onclick="changeBounds('W','E');">-</button>
+        </td>
+        <td>
+          <button onclick="setViewportToBoundingBox();">center</button>
+        </td>
+        <td>
+          <button onclick="changeBounds('E','W');">-</button>
+          <button onclick="changeBounds('E','E');">+</button>
+        </td>
+        <td style="text-align:right;">
+    <input size="3" maxlength="3" type="text" id="changeDegrees" value="0" autocomplete="off"/>º
+    <input size="2" maxlength="2" type="text" id="changeMinutes" value="5" autocomplete="off"/>' 
+    <input size="2" maxlength="2" type="text" id="changeSeconds" value="0" autocomplete="off"/>"
+        </td>
+      </tr>
+      <tr>
+        <td>
+        </td>
+        <td>
+          <button onclick="changeBounds('S','N');">-</button><br/>
+          <button onclick="changeBounds('S','S');">+</button>
+        </td>
+		<td>
+		</td>
+        <td>
+		  <button onclick="setPrecision();">Set Precision</button>
+        </td>
+      </tr>
+    </table>
+
+    <button onclick="setBoundingBoxToViewport();">Create Bounding Box from Current Viewport</button><br/>
+    <table>
+      <tr>
+        <td><button onclick="setPrecisionToMinutes();">Set Precision: Minutes</button></td>
+        <td><button onclick="setPrecisionToDegrees();">Set Precision: Degrees</button></td>
+      </tr>
+      <tr>
+        <td><button onclick="clearBoundingBox();">Clear Bounding Box</button></td>
+		<td><button onclick="drawRectangle();">Draw Bounding Box</button></td>
+        <!--<td><button onclick="window.location.reload();">Reload Page and Clear</button></td>-->
+      </tr>
+    </table>
+	<form onsubmit="searchAddress(); return false;"><input type="text" id="search_address" value="" autocomplete="off"/><button type="submit">Search</button></form>
+    <br/>
+    
+    <form onsubmit="loadPicture(); return false;"><input type="text" id="signatur" value="Ryh_1402_3_A" autocomplete="off"/><button type="submit">Load Image &amp; Rotate</button><input size="4" maxlength="4" type="text" id="angle" value="0" autocomplete="off"/>&deg;</form>
+    <div id="picture" onmouseover="showOverlay();" onmouseout="hideOverlay();"></div><br/>
+    <div id="boundingBoxStatus"></div>
+  </body>
+</html>

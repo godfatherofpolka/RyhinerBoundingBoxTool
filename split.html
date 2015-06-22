@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--     
+  Copyright 2012 Samuel Bucheli, Thomas Klöti
+
+  This file is part of the Ryhiner Bounding Box Tool.
+
+  The Ryhiner Bounding Box Tool is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  The Ryhiner Bounding Box Tool is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Ryhiner Bounding Box Tool.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!-- a simple tool to split a given bound in Aleph 255 format into parts -->
+<html>
+  <head>
+    <title>Ryhiner Split Tool</title>
+    
+    <meta charset="UTF-8">
+    <style type="text/css">
+      html { height: 100%; }
+      body { height: 100%; margin: 0; padding: 0; }
+	  #output table {margin-top: 20px; margin-bottom: 20px; }
+	  #output td {border: 1px solid black; padding: 5px;}
+    </style>
+    <script type="text/javascript" src="js/utils.js"></script>
+	<script type="text/javascript" src="js/Coordinate.js"></script>
+	<script type="text/javascript" src="js/Bounds.js"></script>
+    <script type="text/javascript">
+function split() {
+    "use strict";
+    var coordinates = document.getElementById("aleph255Coordinates").value;
+	var rows = document.getElementById("rows").value;
+	var columns = document.getElementById("columns").value;
+	
+	var precisionDegrees = getValueOrZero("precisionDegrees");
+	var precisionMinutes = getValueOrZero("precisionMinutes");
+	var precisionSeconds = getValueOrZero("precisionSeconds");
+	
+	var precision = dsmToSeconds(precisionDegrees, precisionMinutes, precisionSeconds);
+	
+	var pattern = /^\$\$c(W|E)\s\d{1,3}(°|º)((\d{1,2}')(\d{1,2}")?)?-(W|E)\s\d{1,3}(°|º)((\d{1,2}')(\d{1,2}")?)?\/(N|S)\s\d{1,3}(°|º)((\d{1,2}')(\d{1,2}")?)?-(N|S)\s\d{1,3}(°|º)((\d{1,2}')(\d{1,2}")?)?$/;
+	
+    if (!coordinates.match(pattern)) {
+        alert("Format of Aleph 255 Coordinates not valid. Example: $$cW 25°00'00\"-E 60°17'/N 70°00'03\"-N 30°");
+		return false;
+	}
+	
+	if (isNaN(rows) || isNaN(columns)){
+	    alert("Please enter a number for rows and columns");
+		return false;
+	}
+	
+	if (!precision) {
+	    alert("Please enter a precision bigger than zero");
+		return false;
+	}
+	
+	var bounds = new Bounds();
+	bounds.setFromAleph255String(coordinates.replace(" ", ""));
+	
+    var splitBounds = bounds.split(rows, columns);
+	
+	var k;
+	
+	var outputDiv = document.getElementById('output');
+	var table = document.createElement('table');
+	var textarea = document.createElement('textarea');
+	textarea.cols = 50;
+	textarea.rows = (rows * columns)+1;
+	
+	clearNode(outputDiv);
+	
+	var i, j;
+	for (i = 0; i < rows; i++) {
+	    var row = document.createElement('tr');
+	    for (j = 0; j < columns; j++) {
+	        var cell = document.createElement('td');
+			var index = i * columns + j;
+			var splitBound = splitBounds[index];
+			splitBound.roundTo(precision);
+			cell.appendChild(document.createTextNode("(" + i + ", " + j + ")"));
+			var input = document.createElement('input');
+			input.type = "text";
+			input.size = "50";
+			var value = splitBound.toAleph255String();
+			input.value = value
+			textarea.value += value + "\n";
+			cell.appendChild(input);
+			row.appendChild(cell);
+	    }
+		table.appendChild(row);
+	}
+	
+	outputDiv.appendChild(table);
+	outputDiv.appendChild(textarea);
+}
+    </script>
+  </head>
+  <body>
+    <form onsubmit="split(); return false;">
+      Aleph 255 Coordinates: <input type="text" size="50" maxlength="50" id="aleph255Coordinates" autocomplete="off" value="$$cW 25&deg;00'00&quot;-E 60&deg;00'00&quot;/N 70&deg;00'00&quot;-N 30&deg;00'00&quot;"/>
+      Rows: <input size="3" maxlength="3" id="rows" autocomplete="off" type="text" value="3"/> 
+	  Columns: <input size="3" maxlength="3" id="columns" autocomplete="off" type="text"  value="3"/>
+	  Precision: <input size="3" maxlength="3" type="text" id="precisionDegrees" value="0" autocomplete="off"/>º
+	  <input size="2" maxlength="2" type="text" id="precisionMinutes" value="5" autocomplete="off"/>' 
+      <input size="2" maxlength="2" type="text" id="precisionSeconds" value="0" autocomplete="off"/>"
+	  <button type="submit">Split Aleph 255 Coordinates</button>    
+	</form>
+    
+    <div id="output"></div>	
+	
+    
+    
+  </body>
+</html>

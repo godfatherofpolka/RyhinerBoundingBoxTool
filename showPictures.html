@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--     
+  Copyright 2012 Samuel Bucheli, Thomas Klöti
+
+  This file is part of the Ryhiner Bounding Box Tool.
+
+  The Ryhiner Bounding Box Tool is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  The Ryhiner Bounding Box Tool is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with the Ryhiner Bounding Box Tool.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!-- a simple tool to display all preview pictures of a given group of maps in the Ryhiner collection -->
+<html>
+  <head>
+    <title>Ryhiner Picture Display Tool</title>
+    
+    <meta charset="UTF-8">
+    <style type="text/css">
+      html { height: 100%; }
+      body { height: 100%; margin: 0; padding: 0; }
+      #displayedPicture {position: fixed; height:90%; width:0%; background:black; color:white; display: table-cell; text-align: center; vertical-align: middle;}
+    </style>
+    <script type="text/javascript" src="js/gruppen.js"></script>
+    <script type="text/javascript">
+var urlPrefix = "http://biblio.unibe.ch/adam/ryhiner/";
+var fileExtension = ".jpg";
+var picturesPerRow = 4;
+
+function loadPictures() {
+  var picturesTableDiv = document.getElementById("picturesTable");
+  
+  while (picturesTableDiv.hasChildNodes()) {
+    picturesTableDiv.removeChild(picturesTableDiv.lastChild);
+  }
+ 
+  var gruppe = document.getElementById("gruppe").value;
+  var pattern = /^\d{4}$/;
+  
+  if (!gruppe.match(pattern)) {
+     alert('Invalid group. Please enter a number, e.g. 1402');
+	 return;
+  }
+  
+  if (!(gruppe in gruppen)) {
+     alert("No pictures found for group " + gruppe);
+	 return;
+  }
+  
+
+  var picturesTable = document.createElement('table');
+
+  var i = 0;
+
+  for (pictureIndex in gruppen[gruppe]) {    
+    if (i == 0) {
+      var pictureRow = document.createElement('tr');
+      picturesTable.appendChild(pictureRow);
+    }
+    var pictureCell = document.createElement('td');
+    var pictureLink = document.createElement('a');
+    pictureLink.href = "javascript:displayPicture(" + gruppe + "," +pictureIndex + ");";
+    var figure = document.createElement('figure');
+    var picture = document.createElement('img');
+    picture.src =  urlPrefix + gruppe + "/" + gruppen[gruppe][pictureIndex] + fileExtension;
+    picture.style.width='100%';
+    //picture.style.height='auto';
+    picture.alt = gruppen[gruppe][pictureIndex];
+    var pictureCaption = document.createElement('figcaption');
+    pictureCaption.appendChild(document.createTextNode(gruppen[gruppe][pictureIndex]));
+    figure.appendChild(picture);
+    figure.appendChild(pictureCaption);
+    pictureLink.appendChild(figure);
+    pictureCell.appendChild(pictureLink);
+    pictureRow.appendChild(pictureCell);
+    i++;
+    if (i == picturesPerRow) {
+      i=0;
+    }
+  }
+  
+  picturesTableDiv.appendChild(picturesTable);
+  
+  document.getElementById("status").innerHTML = gruppen[gruppe].length + " pictures loaded.";
+}
+
+function displayPicture(gruppe, pictureIndex) {
+  closePicture();
+  var displayedPictureDiv = document.getElementById("displayedPicture");
+  displayedPictureDiv.style.width='100%';
+
+  var previousPictureIndex = (pictureIndex == 0) ? (gruppen[gruppe].length - 1) : (pictureIndex - 1);
+  var previousPictureLink = document.createElement('a');
+  previousPictureLink.href= "javascript:displayPicture(" + gruppe + "," + (previousPictureIndex) + ");";
+  previousPictureLink.appendChild(document.createTextNode(gruppen[gruppe][previousPictureIndex] + " <<< "));
+  previousPictureLink.style.color = 'white';
+  var nextPictureIndex = (pictureIndex == (gruppen[gruppe].length-1)) ? 0 : (pictureIndex + 1);
+  var nextPictureLink = document.createElement('a');
+  nextPictureLink.href= "javascript:displayPicture(" + gruppe + "," + (nextPictureIndex) + ");";
+  nextPictureLink.appendChild(document.createTextNode(" >>> " + gruppen[gruppe][nextPictureIndex]));
+  nextPictureLink.style.color = 'white';
+  var link = document.createElement('a');
+  link.href = "javascript:closePicture();";
+  var picture = document.createElement('img');
+  picture.src =  urlPrefix + gruppe + "/" + gruppen[gruppe][pictureIndex] + fileExtension;
+  picture.style.height= '90%';
+  picture.style.width = 'auto';
+  picture.alt = gruppen[gruppe][pictureIndex];
+  link.appendChild(picture);
+  displayedPictureDiv.appendChild(link);
+  var displayedPicturePar = document.createElement('p');
+  displayedPicturePar.appendChild(previousPictureLink);
+  displayedPicturePar.appendChild(document.createTextNode(gruppen[gruppe][pictureIndex]));
+  displayedPicturePar.appendChild(nextPictureLink);
+  displayedPictureDiv.appendChild(displayedPicturePar);
+}
+
+function closePicture() {
+  var displayedPictureDiv = document.getElementById("displayedPicture");
+  while (displayedPictureDiv.hasChildNodes()) {
+    var child = displayedPictureDiv.lastChild;
+    displayedPictureDiv.removeChild(child);
+  }
+  displayedPictureDiv.style.width='0%';
+}       
+    </script>
+  </head>
+  <body>
+    <form onsubmit="loadPictures(); return false;"><input type="text" id="gruppe" value=""/><button type="submit">Load Pictures</button><br/>
+    <div id="status"></div>
+    <div id="displayedPicture"></div>
+    <div id="picturesTable"></div>
+  </body>
+</html>
