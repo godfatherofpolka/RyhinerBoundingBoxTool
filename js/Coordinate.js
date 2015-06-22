@@ -1,5 +1,5 @@
 /* 
-  Copyright 2012 Samuel Bucheli, Thomas Klöti
+  Copyright 2012 Samuel Bucheli and Thomas Klöti, University Library Berne.
 
   This file is part of the Ryhiner Bounding Box Tool.
 
