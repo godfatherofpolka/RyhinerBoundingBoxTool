@@ -4,7 +4,7 @@ A collection of some simple Javascript prototype tools I have created during my 
 
 Some documentaion can be found (here)[doc/RyhinerBoundingBoxToolDoku.pdf] (unfortunately, German only).
 
-You can also [try the tool](http://htmlpreview.github.io/?).
+You can also [try the tool](http://htmlpreview.github.io/?https://raw.githubusercontent.com/godfatherofpolka/RyhinerBoundingBoxTool/master/index.html).
 
 ## License
 
